@@ -14,10 +14,10 @@
 
 namespace Modules\Mail\Components;
 
+use Modules\Mail\Transports\MailTransport;
 use Phact\Main\Phact;
 use Phact\Template\Renderer;
 use Swift_Mailer;
-use Swift_MailTransport;
 use Swift_Message;
 use Swift_SendmailTransport;
 use Swift_SmtpTransport;
@@ -73,7 +73,7 @@ class Mailer
             return $transport;
         } elseif ($this->mode == self::MODE_MAIL) {
             $extraParams = isset($config['extraParams']) ? $config['extraParams'] : '-f%s';
-            return new Swift_MailTransport($extraParams);
+            return new MailTransport($extraParams);
         }
         return null;
     }
