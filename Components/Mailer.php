@@ -69,10 +69,7 @@ class Mailer
     public function raw($to, $subject, $body, $additional = [], $attachments = [])
     {
         $message = $this->getMailer();
-        if (!is_array($to)) {
-            $to = [$to];
-        }
-        foreach ($to as $email) {
+        foreach ($this->arrayEmails($to) as $email) {
             $message->addAddress($email);
         }
         $message->isHTML(true);
@@ -84,11 +81,32 @@ class Mailer
         } elseif ($this->defaultFrom) {
             $message->setFrom($this->defaultFrom);
         }
+
+        if (isset($additional['bcc'])) {
+            foreach ($this->arrayEmails($additional['bcc']) as $email) {
+                $message->addBCC($email);
+            }
+        }
+
         $sent = $message->send();
         if (!$sent) {
             echo $message->ErrorInfo;
         }
         return $sent;
+    }
+
+    public function arrayEmails($emails)
+    {
+        if (!is_array($emails)) {
+            $raw = explode(',', $emails);
+            $emails = [];
+            foreach ($raw as $email) {
+                if ($item = trim($email)) {
+                    $emails[] = $item;
+                }
+            }
+        }
+        return $emails;
     }
 
     public function template($to, $subject, $template, $data = [], $additional = [], $attachments = [])
@@ -98,6 +116,15 @@ class Mailer
         ]);
         $body = self::renderTemplate($template, $data);
         return $this->raw($to, $subject, $body, $additional, $attachments);
+    }
+
+    public function send($subject, $template, $data = [], $additional = [], $attachments = [])
+    {
+        $bcc = Phact::app()->settings->get('Mail.hidden_receivers');
+        if ($bcc) {
+            $additional['bcc'] = $bcc;
+        }
+        return $this->template(Phact::app()->settings->get('Mail.receivers'), $subject, $template, $data, $additional, $attachments);
     }
     
     public function getHostInfo()
