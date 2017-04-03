@@ -14,28 +14,20 @@
 
 namespace Modules\Mail\Components;
 
-use Modules\Mail\Transports\MailTransport;
+use Exception;
 use Phact\Main\Phact;
 use Phact\Template\Renderer;
-use Swift_Mailer;
-use Swift_Message;
-use Swift_SendmailTransport;
-use Swift_SmtpTransport;
+use PHPMailer;
 
 class Mailer
 {
     use Renderer;
 
-    // Swift_SendmailTransport
-    const MODE_SENDMAIL = 'sendmail';
-
-    // Swift_MailTransport
-    const MODE_MAIL = 'mail';
-
-    // Swift_SmtpTransport
     const MODE_SMTP = 'smtp';
 
-    public $mode = 'mail';
+    const MODE_MAIL = 'mail';
+
+    public $mode = self::MODE_MAIL;
 
     public $config = [];
 
@@ -47,60 +39,56 @@ class Mailer
      */
     public $hostInfo;
 
-    protected $_transport;
-
-    protected $_mailer;
-
-    public function getTransport()
-    {
-        if (!$this->_transport) {
-            $this->_transport = $this->initTransport();
-        }
-        return $this->_transport;
-    }
-
-    protected function initTransport()
-    {
-        $config = $this->config;
-        if ($this->mode == self::MODE_SENDMAIL) {
-            $command = isset($config['command']) ? $config['command'] : '/usr/sbin/sendmail -bs';
-            return new Swift_SendmailTransport($command);
-        } elseif ($this->mode == self::MODE_SMTP) {
-            $security = isset($config['security']) ? $config['security'] : null;
-            $transport = new Swift_SmtpTransport($config['host'], $config['port'], $security);
-            $transport->setUsername($config['username']);
-            $transport->setPassword($config['password']);
-            return $transport;
-        } elseif ($this->mode == self::MODE_MAIL) {
-            $extraParams = isset($config['extraParams']) ? $config['extraParams'] : '-f%s';
-            return new MailTransport($extraParams);
-        }
-        return null;
-    }
-
-
     protected function getMailer()
     {
-        if (!$this->_mailer) {
-            $this->_mailer = Swift_Mailer::newInstance($this->getTransport());
+        $mailer = new PHPMailer();
+        $mailer->CharSet = 'UTF-8';
+        if ($this->mode == self::MODE_SMTP) {
+            $mailer->isSMTP();
+            $mailer->Host = $this->getConfigOption('host');
+            $mailer->SMTPAuth = $this->getConfigOption('auth', true, false);
+            $mailer->Username = $this->getConfigOption('username');
+            $mailer->Password = $this->getConfigOption('password');
+            $mailer->SMTPSecure = $this->getConfigOption('secure', 'ssl', false);
+            $mailer->Port = $this->getConfigOption('port', 465, false);
         }
-        return $this->_mailer;
+        return $mailer;
+    }
+
+    protected function getConfigOption($name, $default = null, $exception = true)
+    {
+        if (isset($this->config[$name])) {
+            return $this->config[$name];
+        }
+        if ($exception) {
+            throw new Exception("Please, describe option '{$name}' for Mail component");
+        }
+        return $default;
     }
 
     public function raw($to, $subject, $body, $additional = [], $attachments = [])
     {
-        $message = new Swift_Message();
-        $message->setTo($to);
-        $message->setSubject($subject);
-        $message->setBody($body, 'text/html');
+        $message = $this->getMailer();
+        if (!is_array($to)) {
+            $to = [$to];
+        }
+        foreach ($to as $email) {
+            $message->addAddress($email);
+        }
+        $message->isHTML(true);
+        $message->Subject = $subject;
+        $message->Body = $body;
+
         if (isset($additional['from'])) {
             $message->setFrom($additional['from']);
-            $message->setSender($additional['from']);
         } elseif ($this->defaultFrom) {
             $message->setFrom($this->defaultFrom);
-            $message->setSender($this->defaultFrom);
         }
-        return $this->getMailer()->send($message);
+        $sent = $message->send();
+        if (!$sent) {
+            echo $message->ErrorInfo;
+        }
+        return $sent;
     }
 
     public function template($to, $subject, $template, $data = [], $additional = [], $attachments = [])
