@@ -106,7 +106,7 @@ class Mailer
     public function template($to, $subject, $template, $data = [], $additional = [], $attachments = [])
     {
         $data = array_merge($data, [
-            'hostInfo' => $this->hostInfo
+            'hostInfo' => $this->getHostInfo()
         ]);
         $body = self::renderTemplate($template, $data);
         return $this->raw($to, $subject, $body, $additional, $attachments);
