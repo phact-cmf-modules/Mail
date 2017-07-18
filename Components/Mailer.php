@@ -33,6 +33,8 @@ class Mailer
 
     public $defaultFrom;
 
+    public $defaultFromName = '';
+
     /**
      * Example: "http://example.com", "https://10.12.231.43:8000"
      * @var string
@@ -77,9 +79,9 @@ class Mailer
         $message->Body = $body;
 
         if (isset($additional['from'])) {
-            $message->setFrom($additional['from']);
+            $message->setFrom($additional['from'], isset($additional['fromName']) ? $additional['fromName'] : '');
         } elseif ($this->defaultFrom) {
-            $message->setFrom($this->defaultFrom);
+            $message->setFrom($this->defaultFrom, $this->defaultFromName);
         }
 
         if (isset($additional['bcc'])) {
