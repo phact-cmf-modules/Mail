@@ -15,6 +15,7 @@
 namespace Modules\Mail\Components;
 
 use Exception;
+use Modules\Mail\Models\MailAsync;
 use Phact\Main\Phact;
 use Phact\Template\Renderer;
 use PHPMailer;
@@ -22,6 +23,7 @@ use PHPMailer;
 class Mailer
 {
     use Renderer;
+
 
     const MODE_SMTP = 'smtp';
 
@@ -31,9 +33,36 @@ class Mailer
 
     public $config = [];
 
+    public $debug = false;
+
     public $defaultFrom;
 
     public $defaultFromName = '';
+
+    /**
+     * Save emails to MailAsync and send it by SendAsync command
+     * @var bool
+     */
+    public $async = false;
+
+    /**
+     * Send mails from MailAsync for 1 start
+     *
+     * @var int
+     */
+    public $asyncSendBy = 15;
+
+    /**
+     * Retry send, if got error with previous send
+     * @var bool
+     */
+    public $asyncErrorRetry = false;
+
+    /**
+     * Remove successfully sent emails from MailAsync
+     * @var bool
+     */
+    public $asyncAutoClean = true;
 
     /**
      * Example: "http://example.com", "https://10.12.231.43:8000"
@@ -70,6 +99,27 @@ class Mailer
 
     public function raw($to, $subject, $body, $additional = [], $attachments = [])
     {
+        if ($this->async) {
+            return $this->createAsyncModel($to, $subject, $body, $additional, $attachments);
+        } else {
+            return $this->low($to, $subject, $body, $additional, $attachments);
+        }
+    }
+
+    public function createAsyncModel($to, $subject, $body, $additional, $attachments)
+    {
+        $model = new MailAsync();
+        $model->to = $to;
+        $model->subject = $subject;
+        $model->body = $body;
+        $model->additional = $additional;
+        $model->status = MailAsync::STATUS_WAIT;
+        $model->save();
+        return true;
+    }
+
+    public function low($to, $subject, $body, $additional = [], $attachments = [])
+    {
         $message = $this->getMailer();
         foreach ($this->arrayEmails($to) as $email) {
             $message->addAddress($email);
@@ -92,7 +142,9 @@ class Mailer
 
         $sent = $message->send();
         if (!$sent) {
-            echo $message->ErrorInfo;
+            if ($this->debug) {
+                echo $message->ErrorInfo;
+            }
         }
         return $sent;
     }
