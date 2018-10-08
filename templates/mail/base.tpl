@@ -45,7 +45,7 @@
                             <tr>
                                 <td valign="top" style="font-family: Arial;">
                                     {block 'bottom'}
-                                        Сайт:
+                                        {t 'Mail.main' 'Website'}:
                                         <a style="color: black;" href="{$hostInfo}">
                                            {$hostInfo}
                                         </a>

@@ -21,7 +21,7 @@
                     {set $label = $fieldName}
                 {/if}
                 {if $label == 'id'}
-                    {set $label = 'Номер / Идентификатор'}
+                    {set $label = $.t('Mail.main', 'Number / ID')}
                 {/if}
 
                 <table width="100%">
@@ -32,7 +32,9 @@
                         <td width="50%">
                             {if $.php.is_a($field, '\Phact\Orm\Fields\FileField')}
                                 {if $field->getUrl()}
-                                    <a href="{$hostInfo}{$field->getUrl()}" style="color: black; font-size: 14px; font-family: Arial;">Скачать</a>
+                                    <a href="{$hostInfo}{$field->getUrl()}" style="color: black; font-size: 14px; font-family: Arial;">
+                                        {t 'Mail.main' 'Download'}
+                                    </a>
                                 {else}
                                     {$emptyValue}
                                 {/if}
@@ -51,9 +53,9 @@
                                 {/if}
                             {elseif $.php.is_a($field, '\Phact\Orm\Fields\BooleanField')}
                                 {if $field->getValue()}
-                                    Да
+                                    {t 'Mail.main' 'Yes'}
                                 {else}
-                                    Нет
+                                    {t 'Mail.main' 'No'}
                                 {/if}
                             {else}
                                 {set $value = $field->getValue()}

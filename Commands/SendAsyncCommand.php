@@ -18,10 +18,22 @@ namespace Modules\Mail\Commands;
 use Modules\Mail\Components\Mailer;
 use Modules\Mail\Models\MailAsync;
 use Phact\Commands\Command;
-use Phact\Main\Phact;
 
+/**
+ * Send deferred emails
+ * Class SendAsyncCommand
+ * @package Modules\Mail\Commands
+ */
 class SendAsyncCommand extends Command
 {
+    /** @var Mailer */
+    protected $_mailer;
+
+    public function __construct(Mailer $mailer)
+    {
+        $this->_mailer = $mailer;
+    }
+
     public function handle($arguments = [])
     {
         $mailer = $this->getMail();
@@ -40,7 +52,7 @@ class SendAsyncCommand extends Command
     /**
      * @param $model MailAsync
      */
-    public function send($model)
+    public function send(MailAsync $model)
     {
         $mail = $this->getMail();
 
@@ -71,11 +83,11 @@ class SendAsyncCommand extends Command
      */
     public function getMail()
     {
-        return Phact::app()->mail;
+        return $this->_mailer;
     }
 
     public function getDescription()
     {
-        return "Send deferred emails. Example (by 100): Mail SendAsync Handle 100";
+        return 'Send deferred emails. Example (by 100): Mail SendAsync Handle 100';
     }
 }

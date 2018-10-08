@@ -17,9 +17,12 @@ namespace Modules\Mail\Forms;
 use Phact\Form\Fields\CharField;
 use Phact\Form\ModelForm;
 use Modules\Mail\Models\Settings;
+use Phact\Translate\Translator;
 
 class SettingsForm extends ModelForm
 {
+    use Translator;
+
     public function getFields()
     {
         $validator = function($value) {
@@ -28,7 +31,7 @@ class SettingsForm extends ModelForm
                 foreach ($emails as $email) {
                     $item = trim($email);
                     if ($item && !filter_var($item, FILTER_VALIDATE_EMAIL)) {
-                        return "Пожалуйста, укажите список корректных e-mail адресов";
+                        return self::t('Mail.main', 'Please provide a list of valid e-mail addresses');
                     }
                 }
             }
@@ -38,8 +41,8 @@ class SettingsForm extends ModelForm
         return [
             'receivers' => [
                 'class' => CharField::class,
-                'label' => "Получатели писем (по-умолчанию)",
-                'hint' => "Разделитель - запятая",
+                'label' => self::t('Mail.main', 'Please provide a list of valid e-mail addresses'),
+                'hint' => self::t('Mail.main', 'Comma-separated'),
                 'required' => true,
                 'validators' => [
                     $validator
@@ -47,8 +50,8 @@ class SettingsForm extends ModelForm
             ],
             'hidden_receivers' => [
                 'class' => CharField::class,
-                'label' => "Скрытые получатели писем (по-умолчанию)",
-                'hint' => "Разделитель - запятая",
+                'label' => self::t('Mail.main', 'Hidden e-mail receivers (default)'),
+                'hint' => self::t('Mail.main', 'Comma-separated'),
                 'required' => false,
                 'validators' => [
                     $validator

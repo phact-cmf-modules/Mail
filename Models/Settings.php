@@ -15,22 +15,25 @@ namespace Modules\Mail\Models;
 
 use Phact\Orm\Fields\CharField;
 use Phact\Orm\Model;
+use Phact\Translate\Translator;
 
 class Settings extends Model
 {
+    use Translator;
+
     public static function getFields() 
     {
         return [
             'receivers' => [
                 'class' => CharField::class,
-                'label' => "Получатели писем (по-умолчанию)",
-                'hint' => "Разделитель - запятая",
+                'label' => self::t('Mail.main', 'E-mail receivers (default)'),
+                'hint' => self::t('Mail.main', 'Comma-separated'),
                 'null' => true
             ],
             'hidden_receivers' => [
                 'class' => CharField::class,
-                'label' => "Скрытые получатели писем (по-умолчанию)",
-                'hint' => "Разделитель - запятая",
+                'label' => self::t('Mail.main', 'Hidden e-mail receivers (default)'),
+                'hint' => self::t('Mail.main', 'Comma-separated'),
                 'null' => true
             ]
         ];
@@ -38,6 +41,6 @@ class Settings extends Model
     
     public function __toString() 
     {
-        return $this->receivers;
+        return (string) $this->receivers;
     }
 } 

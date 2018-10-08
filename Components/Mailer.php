@@ -16,15 +16,13 @@ namespace Modules\Mail\Components;
 
 use Exception;
 use Modules\Mail\Models\MailAsync;
-use Phact\Main\Phact;
-use Phact\Template\Renderer;
+use Phact\Components\Settings;
+use Phact\Request\HttpRequestInterface;
+use Phact\Template\RendererInterface;
 use PHPMailer;
 
 class Mailer
 {
-    use Renderer;
-
-
     const MODE_SMTP = 'smtp';
 
     const MODE_MAIL = 'mail';
@@ -70,11 +68,33 @@ class Mailer
      */
     public $hostInfo;
 
+    /**
+     * @var HttpRequestInterface
+     */
+    protected $_request;
+
+    /**
+     * @var Settings
+     */
+    protected $_settings;
+
+    /**
+     * @var RendererInterface
+     */
+    protected $_renderer;
+
+    protected function __construct(RendererInterface $renderer, Settings $settings, HttpRequestInterface $_request = null)
+    {
+        $this->_request = $_request;
+        $this->_settings = $settings;
+        $this->_renderer = $renderer;
+    }
+
     protected function getMailer()
     {
         $mailer = new PHPMailer();
         $mailer->CharSet = 'UTF-8';
-        if ($this->mode == self::MODE_SMTP) {
+        if ($this->mode === self::MODE_SMTP) {
             $mailer->isSMTP();
             $mailer->Host = $this->getConfigOption('host');
             $mailer->SMTPAuth = $this->getConfigOption('auth', true, false);
@@ -168,23 +188,23 @@ class Mailer
         $data = array_merge($data, [
             'hostInfo' => $this->getHostInfo()
         ]);
-        $body = self::renderTemplate($template, $data);
+        $body = $this->_renderer->render($template, $data);
         return $this->raw($to, $subject, $body, $additional, $attachments);
     }
 
     public function send($subject, $template, $data = [], $additional = [], $attachments = [])
     {
-        $bcc = Phact::app()->settings->get('Mail.hidden_receivers');
+        $bcc = $this->_settings->get('Mail.hidden_receivers');
         if ($bcc) {
             $additional['bcc'] = $bcc;
         }
-        return $this->template(Phact::app()->settings->get('Mail.receivers'), $subject, $template, $data, $additional, $attachments);
+        return $this->template($this->_settings->get('Mail.receivers'), $subject, $template, $data, $additional, $attachments);
     }
     
     public function getHostInfo()
     {
-        if (!$this->hostInfo) {
-            $this->hostInfo = Phact::app()->request->getHostInfo();
+        if (!$this->hostInfo && $this->_request) {
+            $this->hostInfo = $this->_request->getHostInfo();
         }
         return $this->hostInfo;
     }
