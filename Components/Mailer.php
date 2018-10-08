@@ -83,7 +83,7 @@ class Mailer
      */
     protected $_renderer;
 
-    protected function __construct(RendererInterface $renderer, Settings $settings, HttpRequestInterface $_request = null)
+    public function __construct(RendererInterface $renderer, Settings $settings, HttpRequestInterface $_request = null)
     {
         $this->_request = $_request;
         $this->_settings = $settings;
