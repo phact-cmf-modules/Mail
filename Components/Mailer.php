@@ -117,7 +117,7 @@ class Mailer implements MailerInterface
         return $default;
     }
 
-    public function raw($to, $subject, $body, $additional = [], $attachments = [])
+    public function raw($to, $subject, $body, array $additional = [], array $attachments = [])
     {
         if ($this->async) {
             return $this->createAsyncModel($to, $subject, $body, $additional, $attachments);
@@ -138,7 +138,7 @@ class Mailer implements MailerInterface
         return true;
     }
 
-    public function low($to, $subject, $body, $additional = [], $attachments = [])
+    public function low($to, $subject, $body, array $additional = [], array $attachments = [])
     {
         $message = $this->getMailer();
         foreach ($this->arrayEmails($to) as $email) {
@@ -183,7 +183,7 @@ class Mailer implements MailerInterface
         return $emails;
     }
 
-    public function template($to, $subject, $template, $data = [], $additional = [], $attachments = [])
+    public function template($to, $subject, $template, array $data = [], array $additional = [], array $attachments = [])
     {
         $data = array_merge($data, [
             'hostInfo' => $this->getHostInfo()
@@ -192,7 +192,7 @@ class Mailer implements MailerInterface
         return $this->raw($to, $subject, $body, $additional, $attachments);
     }
 
-    public function send($subject, $template, $data = [], $additional = [], $attachments = [])
+    public function send($subject, $template, array $data = [], array $additional = [], array $attachments = [])
     {
         $bcc = $this->_settings->get('Mail.hidden_receivers');
         if ($bcc) {
