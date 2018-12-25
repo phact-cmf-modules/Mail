@@ -21,7 +21,7 @@ use Phact\Request\HttpRequestInterface;
 use Phact\Template\RendererInterface;
 use PHPMailer;
 
-class Mailer
+class Mailer implements MailerInterface
 {
     const MODE_SMTP = 'smtp';
 
