@@ -160,17 +160,18 @@ class Mailer implements MailerInterface
             }
         }
 
-        $sent = $message->send();
-        if (!$sent) {
-            if ($this->debug) {
-                echo $message->ErrorInfo;
-            }
-        }
         foreach ($attachments as $attachment) {
             if ($attachment instanceof FileAttachment) {
                 $message->addAttachment($attachment->getPath(), $attachment->getName(), $attachment->getEncoding(), $attachment->getType());
             } elseif ($attachment instanceof StringAttachment) {
                 $message->addStringAttachment($attachment->getContent(), $attachment->getName());
+            }
+        }
+
+        $sent = $message->send();
+        if (!$sent) {
+            if ($this->debug) {
+                echo $message->ErrorInfo;
             }
         }
         return $sent;
