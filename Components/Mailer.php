@@ -13,6 +13,8 @@
 namespace Modules\Mail\Components;
 
 use Exception;
+use Modules\Mail\Contrib\FileAttachment;
+use Modules\Mail\Contrib\StringAttachment;
 use Modules\Mail\Models\MailAsync;
 use Phact\Components\Settings;
 use Phact\Request\HttpRequestInterface;
@@ -162,6 +164,13 @@ class Mailer implements MailerInterface
         if (!$sent) {
             if ($this->debug) {
                 echo $message->ErrorInfo;
+            }
+        }
+        foreach ($attachments as $attachment) {
+            if ($attachment instanceof FileAttachment) {
+                $message->addAttachment($attachment->getPath(), $attachment->getName(), $attachment->getEncoding(), $attachment->getType());
+            } elseif ($attachment instanceof StringAttachment) {
+                $message->addStringAttachment($attachment->getContent(), $attachment->getName());
             }
         }
         return $sent;
